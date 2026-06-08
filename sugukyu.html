@@ -783,7 +783,7 @@ textarea {
    印刷
    ===================== */
 @media print {
-   body { display: none; }
+  body { display: none; }
 }
 
 /* =====================
@@ -1095,7 +1095,10 @@ textarea {
   <div class="preview-inner">
     <div class="preview-toolbar">
       <button class="preview-close-btn" onclick="closePreview()">✕ 閉じる</button>
-      <button class="preview-print-btn" onclick="printDoc()">🖨 印刷・PDFで保存</button>
+      <div style="display:flex;gap:8px">
+        <button class="preview-print-btn" style="background:#fff;color:#1a1a1a" onclick="openPrintTab()">🖨 印刷する</button>
+        <button class="preview-print-btn" onclick="downloadPdf()">💾 PDFで保存</button>
+      </div>
     </div>
     <div class="doc" id="doc-content"></div>
   </div>
@@ -1293,6 +1296,73 @@ function preview(type) {
 function closePreview() {
   document.getElementById('preview-panel').classList.remove('open');
   document.body.style.overflow = '';
+}
+
+/* ---------- 印刷用・PDF共通HTML生成 ---------- */
+function buildPrintHtml() {
+  var docHtml = document.getElementById('doc-content').innerHTML;
+  return '<!DOCTYPE html><html lang="ja"><head>' +
+    '<meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>スグキュー 書類</title>' +
+    '<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">' +
+    '<style>' +
+      '*{box-sizing:border-box;margin:0;padding:0}' +
+      'body{font-family:"Zen Maru Gothic","Hiragino Sans",sans-serif;padding:32px;background:#fff;color:#111}' +
+      '.print-btn-wrap{margin-bottom:24px;display:flex;gap:10px}' +
+      '.print-btn{padding:12px 24px;background:#ffe066;border:2px solid #1a1a1a;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:"Zen Maru Gothic",sans-serif}' +
+      '.doc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;padding-bottom:20px;border-bottom:3px solid #111}' +
+      '.doc-title{font-size:28px;font-weight:900;letter-spacing:6px}' +
+      '.doc-no,.doc-meta{font-size:12px;color:#555;margin-top:4px}' +
+      '.doc-issuer{text-align:right;font-size:13px;color:#444;line-height:1.9}' +
+      '.issuer-name{font-size:16px;font-weight:700;color:#111}' +
+      '.doc-to{margin-bottom:28px}' +
+      '.to-label{font-size:11px;color:#888;margin-bottom:4px}' +
+      '.to-name{font-size:20px;font-weight:700;border-bottom:2px solid #111;padding-bottom:4px;display:inline-block}' +
+      '.doc-table{width:100%;border-collapse:collapse;margin-bottom:24px;font-size:13px}' +
+      '.doc-table th{background:#111;color:#fff;padding:10px 12px;text-align:left;font-size:12px;font-weight:700}' +
+      '.doc-table th:not(:first-child){text-align:right}' +
+      '.doc-table td{padding:11px 12px;border-bottom:1px solid #e8e8e8}' +
+      '.doc-table td:not(:first-child){text-align:right;font-family:monospace;font-size:12px}' +
+      '.doc-totals{margin-left:auto;width:280px}' +
+      '.doc-total-row{display:flex;justify-content:space-between;font-size:13px;color:#555;padding:6px 0;border-bottom:1px solid #eee}' +
+      '.doc-total-row.final{font-size:19px;font-weight:900;color:#111;border-bottom:3px solid #111;padding:9px 0;margin-top:4px}' +
+      '.doc-notes{margin-top:36px;padding:16px;background:#f9f9f9;border:1px solid #ddd;border-radius:6px;font-size:13px;color:#333;line-height:1.9;white-space:pre-wrap}' +
+      '.doc-notes-label{font-size:11px;font-weight:700;color:#888;letter-spacing:1px;margin-bottom:6px}' +
+      '.doc-receipt-amount{margin:24px 0;padding:22px;background:#f9f9f9;border:1px solid #ddd;border-radius:8px}' +
+      '.doc-footer{margin-top:40px;padding-top:16px;border-top:1px solid #ddd;font-size:11px;color:#aaa;text-align:center}' +
+      '@media print{' +
+        '.print-btn-wrap{display:none}' +
+        '@page{size:A4;margin:15mm}' +
+        'body{padding:0}' +
+      '}' +
+    '</style>' +
+    '</head><body>' +
+    '<div class="print-btn-wrap">' +
+      '<button class="print-btn" onclick="window.print()">🖨 印刷する</button>' +
+    '</div>' +
+    docHtml +
+    '</body></html>';
+}
+
+/* ---------- 印刷：別タブで開いてwindow.print() ---------- */
+function openPrintTab() {
+  var win = window.open('', '_blank');
+  win.document.write(buildPrintHtml());
+  win.document.close();
+  win.onload = function() { win.print(); };
+}
+
+/* ---------- PDFとして保存：Blob URLでダウンロード ---------- */
+function downloadPdf() {
+  var html  = buildPrintHtml();
+  var blob  = new Blob([html], { type: 'text/html;charset=utf-8' });
+  var url   = URL.createObjectURL(blob);
+  var a     = document.createElement('a');
+  a.href    = url;
+  a.download = 'sugukyu_' + new Date().toISOString().slice(0,10) + '.html';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 /* ---------- 請求書ドキュメント生成 ---------- */
