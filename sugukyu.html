@@ -1364,6 +1364,7 @@ function openPrintTab() {
       '<html lang="ja"><head>' +
       '<meta charset="UTF-8">' +
       '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+      '<meta name="color-scheme" content="light only">' +
       '<title>スグキュー 書類</title>' +
       '<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">' +
       '<style>' +
@@ -1371,8 +1372,9 @@ function openPrintTab() {
         '* { box-sizing: border-box; margin: 0; padding: 0; }' +
         'body {' +
           'font-family: "Zen Maru Gothic", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;' +
-          'background: #fff; color: #111;' +
+          'background: #fff !important; color: #111 !important;' +
           'padding: 20px; font-size: 13px; line-height: 1.7;' +
+          'color-scheme: light;' +
         '}' +
         '.print-toolbar {' +
           'display: flex; gap: 10px; align-items: center;' +
@@ -1412,7 +1414,24 @@ function openPrintTab() {
         '.doc-footer { margin-top: 36px; padding-top: 14px; border-top: 1px solid #ddd; font-size: 10px; color: #aaa; text-align: center; }' +
         '@media print {' +
           '.print-toolbar { display: none !important; }' +
-          'body { padding: 0; }' +
+          '* {' +
+            'position: static !important;' +
+            'float: none !important;' +
+            'height: auto !important;' +
+            'max-height: none !important;' +
+            'min-height: 0 !important;' +
+            'overflow: visible !important;' +
+            'background-color: #fff !important;' +
+            'color: #111 !important;' +
+            '-webkit-print-color-adjust: exact !important;' +
+            'print-color-adjust: exact !important;' +
+          '}' +
+          'body { padding: 0 !important; margin: 0 !important; }' +
+          '.doc-header { display: flex !important; }' +
+          '.doc-issuer { text-align: right !important; }' +
+          '.doc-totals { margin-left: auto !important; width: 260px !important; }' +
+          '.doc-total-row { display: flex !important; justify-content: space-between !important; }' +
+          '.doc-table th { background: #111 !important; color: #fff !important; }' +
         '}' +
       '</style>' +
       '</head><body>' +
