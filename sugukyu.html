@@ -8,9 +8,6 @@
 <!-- ===== FONTS ===== -->
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
 
-<!-- ===== html2pdf.js ===== -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
 <style>
 /* =====================
    CSS変数（ここを変えればテーマ変更）
@@ -820,14 +817,14 @@ textarea {
 
   <!-- ===== ヒーロー ===== -->
   <div class="hero">
-    <div class="hero-eyebrow">✨ 全個人クリエイターのための無料ツール</div>
-    <h1>請求書、<em>5分でできちゃう</em></h1>
+    <div class="hero-eyebrow">✨ クリエイターのための無料ツール</div>
+    <h1>請求書、<em>5分でできちゃった</em>。</h1>
     <p class="hero-desc">
       項目と金額を入れるだけ。難しい操作ゼロ。<br>
       登録なし・無料・データは保存されないから安心。
     </p>
     <div class="hero-badges">
-      <span class="hero-badge">⚡ 登録不要</span>
+      <span class="hero-badge">⚡ 登録なしですぐ使える</span>
       <span class="hero-badge">🎉 ずっと無料</span>
       <span class="hero-badge">🔒 データ保存なし</span>
       <span class="hero-badge">📱 スマホ対応</span>
@@ -1098,10 +1095,7 @@ textarea {
   <div class="preview-inner">
     <div class="preview-toolbar">
       <button class="preview-close-btn" onclick="closePreview()">✕ 閉じる</button>
-      <div style="display:flex;gap:8px">
-        <button class="preview-print-btn" style="background:#fff;color:#1a1a1a" onclick="openPrintTab()">🖨 印刷する</button>
-        <button class="preview-print-btn" onclick="downloadPdf()">💾 PDFで保存</button>
-      </div>
+      <button class="preview-print-btn" onclick="openPrintTab()">🖨 印刷 / PDFで保存</button>
     </div>
     <div class="doc" id="doc-content"></div>
   </div>
@@ -1348,100 +1342,94 @@ function buildPrintHtml() {
     '</body></html>';
 }
 
-/* ---------- 印刷：別タブで開いてwindow.print() ---------- */
+/* ---------- 印刷 / PDF保存：別タブ方式（全環境対応） ---------- */
 function openPrintTab() {
-  var win = window.open('', '_blank');
-  win.document.write(buildPrintHtml());
-  win.document.close();
-  win.onload = function() { win.print(); };
-}
-
-/* ---------- PDFとして直接保存（html2pdf.js） ---------- */
-function downloadPdf() {
   var content = document.getElementById('doc-content');
+  if (!content || !content.innerHTML.trim()) {
+    alert('先にプレビューを表示してください。');
+    return;
+  }
 
-  // 一時コンテナを作ってDOMに追加（html2canvasが描画できるようにする）
-  var container = document.createElement('div');
-  container.style.cssText = [
-    'position:fixed',
-    'top:-9999px',
-    'left:-9999px',
-    'width:170mm',
-    'background:#fff',
-    'color:#111',
-    'font-family:"Hiragino Sans","Yu Gothic",sans-serif',
-    'font-size:13px',
-    'line-height:1.7',
-    'padding:24px'
-  ].join(';');
+  // フォント読み込み完了を待ってから別タブを開く
+  document.fonts.ready.then(function() {
+    var docHtml = content.innerHTML;
 
-  container.innerHTML = content.innerHTML;
+    var win = window.open('', '_blank');
+    if (!win) {
+      alert('ポップアップがブロックされました。\nブラウザのアドレスバー右側のアイコンからポップアップを許可してください。');
+      return;
+    }
 
-  // テーブルスタイル補完
-  container.querySelectorAll('table').forEach(function(t) {
-    t.style.cssText = 'width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px';
-  });
-  container.querySelectorAll('th').forEach(function(el) {
-    el.style.cssText = 'background:#111;color:#fff;padding:7px 9px;text-align:left;font-size:11px';
-  });
-  container.querySelectorAll('td').forEach(function(el) {
-    el.style.cssText = 'padding:8px 9px;border-bottom:1px solid #e0e0e0;font-size:12px';
-  });
-  container.querySelectorAll('.doc-header').forEach(function(el) {
-    el.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #111';
-  });
-  container.querySelectorAll('.doc-title').forEach(function(el) {
-    el.style.cssText = 'font-size:24px;font-weight:900;letter-spacing:4px';
-  });
-  container.querySelectorAll('.doc-totals').forEach(function(el) {
-    el.style.cssText = 'margin-left:auto;width:240px';
-  });
-  container.querySelectorAll('.doc-total-row').forEach(function(el) {
-    el.style.cssText = 'display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid #eee';
-  });
-  container.querySelectorAll('.doc-total-row.final').forEach(function(el) {
-    el.style.cssText = 'display:flex;justify-content:space-between;font-size:17px;font-weight:900;padding:7px 0;border-bottom:3px solid #111;margin-top:4px';
-  });
-  container.querySelectorAll('.doc-footer').forEach(function(el) {
-    el.style.cssText = 'margin-top:32px;padding-top:12px;border-top:1px solid #ddd;font-size:10px;color:#aaa;text-align:center';
-  });
-  container.querySelectorAll('.doc-notes').forEach(function(el) {
-    el.style.cssText = 'margin-top:28px;padding:14px;background:#f9f9f9;border:1px solid #ddd;border-radius:6px;font-size:12px;white-space:pre-wrap;line-height:1.8';
-  });
-  container.querySelectorAll('.doc-receipt-amount').forEach(function(el) {
-    el.style.cssText = 'margin:20px 0;padding:20px;background:#f9f9f9;border:1px solid #ddd;border-radius:8px';
-  });
-  container.querySelectorAll('.to-name').forEach(function(el) {
-    el.style.cssText = 'font-size:18px;font-weight:700;border-bottom:2px solid #111;padding-bottom:3px;display:inline-block';
-  });
-  container.querySelectorAll('.issuer-name').forEach(function(el) {
-    el.style.cssText = 'font-size:14px;font-weight:700';
-  });
-
-  document.body.appendChild(container);
-
-  var fname = 'sugukyu_' + new Date().toISOString().slice(0, 10) + '.pdf';
-  var opt = {
-    margin:      [10, 15, 10, 15],
-    filename:    fname,
-    image:       { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
-    jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak:   { mode: ['avoid-all'] }
-  };
-
-  // ボタンを「生成中...」に変える
-  var btn = document.querySelector('.preview-print-btn:last-child');
-  var orig = btn ? btn.textContent : '';
-  if (btn) { btn.textContent = '⏳ 生成中...'; btn.disabled = true; }
-
-  html2pdf().set(opt).from(container).save().then(function() {
-    document.body.removeChild(container);
-    if (btn) { btn.textContent = orig; btn.disabled = false; }
-  }).catch(function() {
-    document.body.removeChild(container);
-    if (btn) { btn.textContent = orig; btn.disabled = false; }
-    alert('PDF生成に失敗しました。もう一度お試しください。');
+    win.document.write('<!DOCTYPE html>' +
+      '<html lang="ja"><head>' +
+      '<meta charset="UTF-8">' +
+      '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+      '<title>スグキュー 書類</title>' +
+      '<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">' +
+      '<style>' +
+        '@page { size: A4; margin: 15mm; }' +
+        '* { box-sizing: border-box; margin: 0; padding: 0; }' +
+        'body {' +
+          'font-family: "Zen Maru Gothic", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;' +
+          'background: #fff; color: #111;' +
+          'padding: 20px; font-size: 13px; line-height: 1.7;' +
+        '}' +
+        '.print-toolbar {' +
+          'display: flex; gap: 10px; align-items: center;' +
+          'margin-bottom: 20px; padding: 10px 0;' +
+          'position: sticky; top: 0; background: #fff; z-index: 10;' +
+          'border-bottom: 1px solid #ddd;' +
+        '}' +
+        '.print-btn {' +
+          'padding: 10px 24px; background: #ffe066;' +
+          'border: 2px solid #1a1a1a; border-radius: 8px;' +
+          'font-size: 14px; font-weight: 700; cursor: pointer;' +
+          'font-family: inherit;' +
+        '}' +
+        '.print-note { font-size: 12px; color: #888; }' +
+        '.doc-header {' +
+          'display: flex; justify-content: space-between; align-items: flex-start;' +
+          'margin-bottom: 28px; padding-bottom: 16px; border-bottom: 3px solid #111;' +
+        '}' +
+        '.doc-title { font-size: 26px; font-weight: 900; letter-spacing: 6px; }' +
+        '.doc-no, .doc-meta { font-size: 12px; color: #555; margin-top: 4px; }' +
+        '.doc-issuer { text-align: right; font-size: 12px; color: #444; line-height: 1.9; }' +
+        '.issuer-name { font-size: 15px; font-weight: 700; color: #111; }' +
+        '.doc-to { margin-bottom: 24px; }' +
+        '.to-label { font-size: 11px; color: #888; margin-bottom: 3px; }' +
+        '.to-name { font-size: 19px; font-weight: 700; border-bottom: 2px solid #111; padding-bottom: 3px; display: inline-block; }' +
+        '.doc-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; }' +
+        '.doc-table th { background: #111; color: #fff; padding: 9px 10px; text-align: left; font-size: 11px; font-weight: 700; }' +
+        '.doc-table th:not(:first-child) { text-align: right; }' +
+        '.doc-table td { padding: 10px; border-bottom: 1px solid #e8e8e8; }' +
+        '.doc-table td:not(:first-child) { text-align: right; font-family: monospace; font-size: 11px; }' +
+        '.doc-totals { margin-left: auto; width: 260px; }' +
+        '.doc-total-row { display: flex; justify-content: space-between; font-size: 12px; color: #555; padding: 5px 0; border-bottom: 1px solid #eee; }' +
+        '.doc-total-row.final { font-size: 18px; font-weight: 900; color: #111; border-bottom: 3px solid #111; padding: 8px 0; margin-top: 3px; }' +
+        '.doc-notes { margin-top: 32px; padding: 14px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 6px; font-size: 12px; line-height: 1.8; white-space: pre-wrap; }' +
+        '.doc-notes-label { font-size: 10px; font-weight: 700; color: #888; letter-spacing: 1px; margin-bottom: 5px; }' +
+        '.doc-receipt-amount { margin: 20px 0; padding: 20px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; }' +
+        '.doc-footer { margin-top: 36px; padding-top: 14px; border-top: 1px solid #ddd; font-size: 10px; color: #aaa; text-align: center; }' +
+        '@media print {' +
+          '.print-toolbar { display: none !important; }' +
+          'body { padding: 0; }' +
+        '}' +
+      '</style>' +
+      '</head><body>' +
+      '<div class="print-toolbar">' +
+        '<button class="print-btn" onclick="window.print()">🖨 印刷 / PDFで保存</button>' +
+        '<span class="print-note">PDFで保存する場合：印刷 → 送信先を「PDFに保存」に変更</span>' +
+      '</div>' +
+      '<div id="doc-print">' + docHtml + '</div>' +
+      '<script>' +
+        // フォント読み込み完了後に自動で印刷ダイアログを開く
+        'document.fonts.ready.then(function() {' +
+          'window.print();' +
+        '});' +
+      '<\/script>' +
+      '</body></html>'
+    );
+    win.document.close();
   });
 }
 
