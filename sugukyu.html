@@ -783,17 +783,7 @@ textarea {
    印刷
    ===================== */
 @media print {
-  body * { visibility: hidden; }
-  .doc, .doc * { visibility: visible; }
-  .doc {
-    position: fixed;
-    inset: 0;
-    border: none;
-    box-shadow: none;
-    border-radius: 0;
-    padding: 32px;
-  }
-  .preview-toolbar { display: none; }
+   body { display: none; }
 }
 
 /* =====================
@@ -1105,7 +1095,7 @@ textarea {
   <div class="preview-inner">
     <div class="preview-toolbar">
       <button class="preview-close-btn" onclick="closePreview()">✕ 閉じる</button>
-      <button class="preview-print-btn" onclick="window.print()">🖨 印刷・PDFで保存</button>
+      <button class="preview-print-btn" onclick="printDoc()">🖨 印刷・PDFで保存</button>
     </div>
     <div class="doc" id="doc-content"></div>
   </div>
