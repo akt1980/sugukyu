@@ -324,6 +324,7 @@ textarea {
   border-collapse: separate;
   border-spacing: 0 8px;
   margin-bottom: 14px;
+  table-layout: fixed;
 }
 
 .items-table th {
@@ -334,15 +335,20 @@ textarea {
   padding: 0 8px 4px;
 }
 
-.items-table th:last-child { width: 44px; }
+.items-table th:nth-child(1) { width: auto; }
+.items-table th:nth-child(2) { width: 52px; }
+.items-table th:nth-child(3) { width: 90px; }
+.items-table th:nth-child(4) { width: 36px; }
 
-.item-row td {
+.items-table .item-row td {
   padding: 0 4px;
   vertical-align: middle;
 }
 
-.item-row input {
+.items-table .item-row input {
   background: var(--color-white);
+  width: 100%;
+  min-width: 0;
 }
 
 .remove-btn {
