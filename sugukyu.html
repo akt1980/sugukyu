@@ -1248,10 +1248,10 @@ function addItem() {
   tr.className = 'item-row';
   tr.id = 'item-' + id;
   tr.innerHTML = 
-  　'<td data-label="項目名"><input type="text" placeholder="例：キャラクターイラスト制作" id="item-name-' + id + '" oninput="calcInvoice()"></td>' +
-  　'<td data-label="数量"><input type="number" value="1" min="1" id="item-qty-' + id + '" oninput="calcInvoice()" style="text-align:right"></td>' +
-  　'<td data-label="単価（税抜）"><input type="number" placeholder="0" id="item-price-' + id + '" oninput="calcInvoice()" style="text-align:right"></td>' +
-  　'<td><button class="remove-btn" onclick="removeItem(' + id + ')">✕</button></td>';
+    '<td data-label="項目名"><input type="text" placeholder="例：キャラクターイラスト制作" id="item-name-' + id + '" oninput="calcInvoice()"></td>' +
+    '<td data-label="数量"><input type="number" value="1" min="1" id="item-qty-' + id + '" oninput="calcInvoice()" style="text-align:right"></td>' +
+    '<td data-label="単価（税抜）"><input type="number" placeholder="0" id="item-price-' + id + '" oninput="calcInvoice()" style="text-align:right"></td>' +
+    '<td><button class="remove-btn" onclick="removeItem(' + id + ')">✕</button></td>';
   tbody.appendChild(tr);
 }
 
