@@ -803,6 +803,40 @@ textarea {
   .doc             { padding: 24px 16px; }
   .doc-header      { flex-direction: column; gap: 16px; }
   .doc-issuer      { text-align: left; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+  }
+  th, td {
+    padding: 10px 4px;
+  }
+  table thead, table tr:first-child {
+    display: none;
+  }
+  table tr {
+    display: block;
+    background: #1f1f1f;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  table td {
+    display: block;
+    width: 100% !important;
+    border: none;
+    padding: 6px 0;
+    text-align: left;
+  }
+  table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 4px;
+    font-weight: bold;
+  }
 }
 </style>
 </head>
@@ -1213,11 +1247,11 @@ function addItem() {
   var tr = document.createElement('tr');
   tr.className = 'item-row';
   tr.id = 'item-' + id;
-  tr.innerHTML =
-    '<td><input type="text" placeholder="例：キャラクターイラスト制作" id="item-name-' + id + '" oninput="calcInvoice()"></td>' +
-    '<td><input type="number" value="1" min="1" id="item-qty-' + id + '" oninput="calcInvoice()" style="text-align:right"></td>' +
-    '<td><input type="number" placeholder="0" id="item-price-' + id + '" oninput="calcInvoice()" style="text-align:right"></td>' +
-    '<td><button class="remove-btn" onclick="removeItem(' + id + ')">✕</button></td>';
+  tr.innerHTML = 
+  　'<td data-label="項目名"><input type="text" placeholder="例：キャラクターイラスト制作" id="item-name-' + id + '" oninput="calcInvoice()"></td>' +
+  　'<td data-label="数量"><input type="number" value="1" min="1" id="item-qty-' + id + '" oninput="calcInvoice()" style="text-align:right"></td>' +
+  　'<td data-label="単価（税抜）"><input type="number" placeholder="0" id="item-price-' + id + '" oninput="calcInvoice()" style="text-align:right"></td>' +
+  　'<td><button class="remove-btn" onclick="removeItem(' + id + ')">✕</button></td>';
   tbody.appendChild(tr);
 }
 
