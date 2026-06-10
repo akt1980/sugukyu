@@ -317,39 +317,40 @@ textarea {
 }
 
 /* =====================
-   明細テーブル
+   明細グリッド（テーブルなし）
    ===================== */
-.items-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 8px;
-  margin-bottom: 14px;
-  table-layout: fixed;
+.items-header {
+  display: grid;
+  grid-template-columns: 1fr 20% 28% 36px;
+  gap: 4px;
+  padding: 0 4px 6px;
+  border-bottom: 2px solid var(--color-border);
+  margin-bottom: 6px;
 }
 
-.items-table th {
-  text-align: left;
-  font-size: 12px;
+.items-header span {
+  font-size: 11px;
   font-weight: 700;
   color: var(--color-muted);
-  padding: 0 8px 4px;
 }
 
-.items-table th:nth-child(1) { width: auto; }
-.items-table th:nth-child(2) { width: 52px; }
-.items-table th:nth-child(3) { width: 90px; }
-.items-table th:nth-child(4) { width: 36px; }
-
-.items-table .item-row td {
-  padding: 0 4px;
-  vertical-align: middle;
+.item-row {
+  display: grid;
+  grid-template-columns: 1fr 20% 28% 36px;
+  gap: 4px;
+  margin-bottom: 6px;
+  align-items: center;
 }
 
-.items-table .item-row input {
+.item-row input {
   background: var(--color-white);
   width: 100%;
   min-width: 0;
+  padding: 10px 8px;
 }
+
+.item-row .input-qty  { text-align: center; }
+.item-row .input-price { text-align: right; }
 
 .remove-btn {
   width: 36px;
