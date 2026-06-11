@@ -321,7 +321,7 @@ textarea {
    ===================== */
 .items-header {
   display: grid;
-  grid-template-columns: 1fr 20% 28% 36px;
+  grid-template-columns: 1fr 15% 22% 36px;
   gap: 4px;
   padding: 0 4px 6px;
   border-bottom: 2px solid var(--color-border);
@@ -332,11 +332,14 @@ textarea {
   font-size: 11px;
   font-weight: 700;
   color: var(--color-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .item-row {
   display: grid;
-  grid-template-columns: 1fr 20% 28% 36px;
+  grid-template-columns: 1fr 15% 22% 36px;
   gap: 4px;
   margin-bottom: 6px;
   align-items: center;
@@ -346,7 +349,7 @@ textarea {
   background: var(--color-white);
   width: 100%;
   min-width: 0;
-  padding: 10px 8px;
+  padding: 10px 6px;
 }
 
 .item-row .input-qty  { text-align: center; }
@@ -803,40 +806,6 @@ textarea {
   .doc             { padding: 24px 16px; }
   .doc-header      { flex-direction: column; gap: 16px; }
   .doc-issuer      { text-align: left; }
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 16px 0;
-  }
-  th, td {
-    padding: 10px 4px;
-  }
-  table thead, table tr:first-child {
-    display: none;
-  }
-  table tr {
-    display: block;
-    background: #1f1f1f;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 12px;
-  }
-  table td {
-    display: block;
-    width: 100% !important;
-    border: none;
-    padding: 6px 0;
-    text-align: left;
-  }
-  table td::before {
-    content: attr(data-label);
-    display: block;
-    font-size: 11px;
-    color: #888;
-    margin-bottom: 4px;
-    font-weight: bold;
-  }
 }
 </style>
 </head>
@@ -951,17 +920,13 @@ table {
     <div class="section">
       <div class="section-title">🛒 やりとりの内容</div>
 
-      <table class="items-table">
-        <thead>
-          <tr>
-            <th>項目名</th>
-            <th style="width:80px">数量</th>
-            <th style="width:140px">単価（税抜）</th>
-            <th style="width:44px"></th>
-          </tr>
-        </thead>
-        <tbody id="i-items"></tbody>
-      </table>
+      <div class="items-header">
+        <span>項目名</span>
+        <span>数量</span>
+        <span>単価(税抜)</span>
+        <span></span>
+      </div>
+      <div id="i-items"></div>
 
       <button class="add-item-btn" onclick="addItem()">＋ 項目を追加する</button>
 
@@ -1242,17 +1207,17 @@ function switchTab(tab) {
 
 /* ---------- 明細追加・削除 ---------- */
 function addItem() {
-  var tbody = document.getElementById('i-items');
-  var id = itemCount++;
-  var tr = document.createElement('tr');
-  tr.className = 'item-row';
-  tr.id = 'item-' + id;
-  tr.innerHTML = 
-    '<td data-label="項目名"><input type="text" placeholder="例：キャラクターイラスト制作" id="item-name-' + id + '" oninput="calcInvoice()"></td>' +
-    '<td data-label="数量"><input type="number" value="1" min="1" id="item-qty-' + id + '" oninput="calcInvoice()" style="text-align:right"></td>' +
-    '<td data-label="単価（税抜）"><input type="number" placeholder="0" id="item-price-' + id + '" oninput="calcInvoice()" style="text-align:right"></td>' +
-    '<td><button class="remove-btn" onclick="removeItem(' + id + ')">✕</button></td>';
-  tbody.appendChild(tr);
+  var wrap = document.getElementById('i-items');
+  var id   = itemCount++;
+  var div  = document.createElement('div');
+  div.className = 'item-row';
+  div.id        = 'item-' + id;
+  div.innerHTML =
+    '<input type="text" placeholder="例：イラスト制作" id="item-name-' + id + '" oninput="calcInvoice()">' +
+    '<input type="number" value="1" min="1" id="item-qty-' + id + '" class="input-qty" oninput="calcInvoice()">' +
+    '<input type="number" placeholder="0" id="item-price-' + id + '" class="input-price" oninput="calcInvoice()">' +
+    '<button class="remove-btn" onclick="removeItem(' + id + ')">✕</button>';
+  wrap.appendChild(div);
 }
 
 function removeItem(id) {
@@ -1262,7 +1227,7 @@ function removeItem(id) {
 }
 
 function getItems() {
-  var rows  = document.querySelectorAll('.item-row');
+  var rows  = document.querySelectorAll('#i-items .item-row');
   var items = [];
   rows.forEach(function(row) {
     var id    = row.id.replace('item-', '');
