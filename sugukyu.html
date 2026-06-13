@@ -792,7 +792,67 @@ textarea {
 /* =====================
    印刷
    ===================== */
-@media print {
+   /* =====================
+   情報保存チェックボックス
+   ===================== */
+.save-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--color-surface2);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.save-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  padding: 0;
+  border: 2px solid var(--color-border);
+  border-radius: 4px;
+  cursor: pointer;
+  accent-color: var(--color-pink);
+}
+
+.save-toggle-label {
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+}
+
+.save-toggle-label small {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-muted);
+  margin-top: 2px;
+}
+
+.save-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-text);
+  color: var(--color-white);
+  padding: 10px 20px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 200;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.save-toast.show { opacity: 1; }
+   @media print {
   body { display: none; }
 }
 
@@ -851,7 +911,14 @@ textarea {
        請求書フォーム
        ======================================== -->
   <div id="invoice-form">
-
+<!-- 情報保存チェックボックス -->
+      <label class="save-toggle">
+        <input type="checkbox" id="i-save-check" onchange="onSaveCheck('invoice')">
+        <div class="save-toggle-label">
+          この情報を次回も自動入力する
+          <small>チェックを外すと保存データを削除します</small>
+        </div>
+      </label>
     <!-- 発行者情報 -->
     <div class="section">
       <div class="section-title">👤 あなたの情報</div>
@@ -998,7 +1065,14 @@ textarea {
        領収書フォーム
        ======================================== -->
   <div id="receipt-form" style="display:none">
-
+<!-- 情報保存チェックボックス -->
+      <label class="save-toggle">
+        <input type="checkbox" id="r-save-check" onchange="onSaveCheck('receipt')">
+        <div class="save-toggle-label">
+          この情報を次回も自動入力する
+          <small>チェックを外すと保存データを削除します</small>
+        </div>
+      </label>
     <div class="section">
       <div class="section-title">👤 あなたの情報</div>
       <div class="form-row">
@@ -1160,6 +1234,7 @@ window.onload = function() {
   // 広告をランダム表示
   renderAd('ad-top',    ADS_TOP);
   renderAd('ad-bottom', ADS_BOTTOM);
+  loadSavedIssuer();
 
   var today = new Date();
   var due   = new Date();
@@ -1602,7 +1677,70 @@ function buildReceiptDoc() {
     '<div class="doc-footer">この書類は「スグキュー」で作成されました</div>'
   );
 }
+/* ---------- localStorage 保存・読み込み ---------- */
+var SAVE_KEY = 'sugukyu_issuer';
 
+function loadSavedIssuer() {
+  try {
+    var saved = localStorage.getItem(SAVE_KEY);
+    if (!saved) return;
+    var data = JSON.parse(saved);
+
+    // 請求書フォームに反映
+    if (data.name)  document.getElementById('i-issuer-name').value  = data.name;
+    if (data.email) document.getElementById('i-issuer-email').value = data.email;
+    if (data.sns)   document.getElementById('i-issuer-sns').value   = data.sns;
+    if (data.web)   document.getElementById('i-issuer-web').value   = data.web;
+    if (data.notes) document.getElementById('i-notes').value        = data.notes;
+
+    // 領収書フォームに反映
+    if (data.name)  document.getElementById('r-issuer-name').value  = data.name;
+    if (data.email) document.getElementById('r-issuer-email').value = data.email;
+    if (data.web)   document.getElementById('r-issuer-web').value   = data.web;
+
+    // チェックボックスをオンに
+    document.getElementById('i-save-check').checked = true;
+    document.getElementById('r-save-check').checked = true;
+  } catch(e) {}
+}
+
+function onSaveCheck(type) {
+  var checked = document.getElementById(type === 'invoice' ? 'i-save-check' : 'r-save-check').checked;
+
+  // 両方のチェックボックスを同期
+  document.getElementById('i-save-check').checked = checked;
+  document.getElementById('r-save-check').checked = checked;
+
+  if (checked) {
+    saveIssuer();
+  } else {
+    try { localStorage.removeItem(SAVE_KEY); } catch(e) {}
+    showSaveToast('🗑 保存データを削除しました');
+  }
+}
+
+function saveIssuer() {
+  try {
+    var data = {
+      name:  document.getElementById('i-issuer-name').value,
+      email: document.getElementById('i-issuer-email').value,
+      sns:   document.getElementById('i-issuer-sns').value,
+      web:   document.getElementById('i-issuer-web').value,
+      notes: document.getElementById('i-notes').value
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    showSaveToast('✅ あなたの情報を保存しました');
+  } catch(e) {
+    showSaveToast('⚠️ 保存に失敗しました');
+  }
+}
+
+function showSaveToast(msg) {
+  var toast = document.getElementById('save-toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(function() { toast.classList.remove('show'); }, 2500);
+}
 /* ---------- リセット ---------- */
 function resetForm(type) {
   if (!confirm('入力内容をすべてリセットしますか？')) return;
@@ -1631,5 +1769,7 @@ function resetForm(type) {
   }
 }
 </script>
+   <!-- トースト通知 -->
+<div class="save-toast" id="save-toast"></div>
 </body>
 </html>
