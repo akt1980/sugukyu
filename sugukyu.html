@@ -1423,32 +1423,20 @@ function buildPrintHtml() {
     '</body></html>';
 }
 
-/* ---------- 印刷 / PDF保存：別タブ方式（全環境対応） ---------- */
-function openPrintTab() {
-  var content = document.getElementById('doc-content');
-  if (!content || !content.innerHTML.trim()) {
-    alert('先にプレビューを表示してください。');
-    return;
-  }
-
-  // フォント読み込み完了を待ってから別タブを開く
-  document.fonts.ready.then(function() {
-    var docHtml = content.innerHTML;
-
-    var win = window.open('', '_blank');
-    if (!win) {
-      alert('ポップアップがブロックされました。\nブラウザのアドレスバー右側のアイコンからポップアップを許可してください。');
-      return;
-    }
-
-    win.document.write('<!DOCTYPE html>' +
-      '<html lang="ja"><head>' +
-      '<meta charset="UTF-8">' +
-      '<meta name="viewport" content="width=device-width,initial-scale=1">' +
-      '<meta name="color-scheme" content="light only">' +
-      '<title>スグキュー 書類</title>' +
-      '<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">' +
-      '<style>' +
+/* ---------- 印刷 / PDF保存（v2：ポップアップブロック対策版） ----------
+   旧版の問題：document.fonts.ready の「待ち」の後に window.open していたため、
+   クリック直後の扱いにならず、ブラウザにポップアップとして無言でブロックされることがあった。
+   v2：クリック直後に同期で別タブを開く → 開けなければ同じページ内の隠しiframeで印刷。
+------------------------------------------------------------------------ */
+function buildPrintPageHtml(docHtml, autoPrint) {
+  return '<!DOCTYPE html>' +
+    '<html lang="ja"><head>' +
+    '<meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<meta name="color-scheme" content="light only">' +
+    '<title>スグキュー 書類</title>' +
+    '<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">' +
+    '<style>' +
         '@page { size: A4; margin: 15mm; }' +
         '* { box-sizing: border-box; margin: 0; padding: 0; }' +
         'body {' +
@@ -1515,22 +1503,77 @@ function openPrintTab() {
           '.doc-table th { background: #111 !important; color: #fff !important; }' +
         '}' +
       '</style>' +
-      '</head><body>' +
-      '<div class="print-toolbar">' +
-        '<button class="print-btn" onclick="window.print()">🖨 印刷 / PDFで保存</button>' +
-        '<span class="print-note">PDFで保存する場合：印刷 → 送信先を「PDFに保存」に変更</span>' +
-      '</div>' +
-      '<div id="doc-print">' + docHtml + '</div>' +
+    '</head><body>' +
+    '<div class="print-toolbar">' +
+      '<button class="print-btn" onclick="window.print()">🖨 印刷 / PDFで保存</button>' +
+      '<span class="print-note">PDFで保存する場合：印刷 → 送信先を「PDFに保存」に変更</span>' +
+    '</div>' +
+    '<div id="doc-print">' + docHtml + '</div>' +
+    (autoPrint ?
       '<script>' +
-        // フォント読み込み完了後に自動で印刷ダイアログを開く
-        'document.fonts.ready.then(function() {' +
-          'window.print();' +
-        '});' +
-      '<\/script>' +
-      '</body></html>'
-    );
-    win.document.close();
-  });
+        // フォント待ちは最大1.5秒。Googleフォントが遅い/読めない環境でも必ずダイアログを出す
+        '(function(){var done=false;function go(){if(done)return;done=true;setTimeout(function(){window.print();},100);}' +
+        'try{document.fonts.ready.then(go);}catch(e){}setTimeout(go,1500);})();' +
+      '<\/script>' : '') +
+    '</body></html>';
+}
+
+function openPrintTab() {
+  var content = document.getElementById('doc-content');
+  if (!content || !content.innerHTML.trim()) {
+    alert('先にプレビューを表示してください。');
+    return;
+  }
+  var docHtml = content.innerHTML;
+
+  // ① クリック直後に「同期で」別タブを開く（awaitやthenの後に開くとブロックされる）
+  var win = null;
+  try { win = window.open('', '_blank'); } catch (e) { win = null; }
+
+  if (win && !win.closed) {
+    try {
+      win.document.open();
+      win.document.write(buildPrintPageHtml(docHtml, true));
+      win.document.close();
+      try { win.focus(); } catch (e) {}
+      return;
+    } catch (e) {
+      try { win.close(); } catch (e2) {}
+    }
+  }
+
+  // ② 別タブが開けない環境 → 同じページ内の隠しiframeで印刷（ポップアップ不要）
+  printViaIframe(docHtml);
+}
+
+function printViaIframe(docHtml) {
+  var old = document.getElementById('sugukyu-print-frame');
+  if (old) old.parentNode.removeChild(old);
+
+  var iframe = document.createElement('iframe');
+  iframe.id = 'sugukyu-print-frame';
+  iframe.setAttribute('aria-hidden', 'true');
+  iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+  document.body.appendChild(iframe);
+
+  var idoc = iframe.contentWindow.document;
+  idoc.open();
+  idoc.write(buildPrintPageHtml(docHtml, false));
+  idoc.close();
+
+  var printed = false;
+  function doPrint() {
+    if (printed) return;
+    printed = true;
+    try {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    } catch (e) {
+      alert('印刷画面を開けませんでした。\nブラウザのポップアップを許可して、もう一度お試しください。');
+    }
+  }
+  try { iframe.contentWindow.document.fonts.ready.then(function(){ setTimeout(doPrint, 100); }); } catch (e) {}
+  setTimeout(doPrint, 1500);
 }
 
 /* ---------- 請求書ドキュメント生成 ---------- */
